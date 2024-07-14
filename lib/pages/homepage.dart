@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utilities/utility.dart';
 import 'package:get/get.dart';
-// import '../main.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,7 +8,7 @@ class Task {
   String task;
   bool? isDone;
 
-  Task({required this.task, this.isDone});
+  Task({required this.task, this.isDone = false});
 
   Map<String, dynamic> toJson() => {
         'task': task,
@@ -91,7 +90,43 @@ class _HomePageState extends State<HomePage> {
       body: ListView.separated(
           itemBuilder: (BuildContext context, int index) {
             return ListTile(
-                title: Text(tasklist[index].task, style: AppUtility.tasktextstyle,),
+                title: Text(
+                  tasklist[index].task,
+                  style: AppUtility.tasktextstyle,
+                ),
+                onTap: () {
+                  TextEditingController editor = TextEditingController();
+                  editor.text = tasklist[index].task;
+                  Get.defaultDialog(
+                    titlePadding: const EdgeInsets.symmetric(vertical: 20),
+                    contentPadding: const EdgeInsets.all(20),
+                    title: "Edit Task",
+                    content: TextField(
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: "Task",
+                      ),
+                      controller: editor,
+                    ),
+                    barrierDismissible: true,
+                    actions: [
+                      TextButton(
+                          onPressed: () => Get.back(),
+                          child: const Text("Cancel")),
+                      TextButton(onPressed: () async {
+                        final pref = await SharedPreferences.getInstance();
+                        setState(() {
+                          tasklist[index].task = editor.text;
+                        });
+                        await pref.remove('tasklist');
+                        saveTaskList(tasklist);
+
+                        Get.back();
+
+                      }, child: const Text("Done")),
+                    ],
+                  );
+                },
                 tileColor: tasklist[index].isDone == true
                     ? const Color.fromARGB(147, 33, 149, 243)
                     : AppUtility().taskbgcolor,
@@ -116,11 +151,11 @@ class _HomePageState extends State<HomePage> {
                     await pref.remove('tasklist');
                     saveTaskList(tasklist);
                   },
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                 ));
           },
           separatorBuilder: (BuildContext context, int index) =>
-              const Divider(),
+              const Divider(height: 5, color: Colors.grey),
           itemCount: tasklist.length),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -137,7 +172,8 @@ class _HomePageState extends State<HomePage> {
             ),
             barrierDismissible: false,
             actions: [
-              TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
+              TextButton(
+                  onPressed: () => Get.back(), child: const Text("Cancel")),
               TextButton(
                   onPressed: () {
                     String currenttext = textcontroller.text;
@@ -154,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                     textcontroller.clear();
                     Get.back();
                   },
-                  child: Text("Save")),
+                  child: const Text("Save")),
             ],
           );
         },
